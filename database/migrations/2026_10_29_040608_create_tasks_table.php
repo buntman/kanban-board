@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tasks', function (Blueprint $table) {
-            $table->id('task_id');
-            $table->foreign('project_card_id')->constrained('project_cards', 'project_card_id')->onDelete('cascade');
+            $table->id();
+            $table->foreignId('project_card_id')->constrained('project_cards')->onDelete('cascade');
             $table->string('name', 100);
             $table->text('description')->nullable();
             $table->unsignedBigInteger('position')->default(1000);
