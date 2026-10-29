@@ -3,8 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\HasMany;
-use Illuminate\Database\Eloquent\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProjectCard extends Model
 {
@@ -12,7 +12,7 @@ class ProjectCard extends Model
 
     public function project(): BelongsTo
     {
-        return $this->belongsTo(Project::class)
+        return $this->belongsTo(Project::class);
     }
 
     public function tasks(): HasMany
