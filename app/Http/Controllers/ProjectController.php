@@ -12,7 +12,10 @@ class ProjectController extends Controller
      */
     public function index()
     {
-        //
+        return response()->json([
+            'success' => true,
+            'data' => Project::with('projectCards')->get()
+        ], 200);
     }
 
     /**
@@ -28,7 +31,17 @@ class ProjectController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string|max:100',
+            'description' => 'nullable|string'
+        ]);
+
+        $project = Project::create($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Project created successfully!'
+        ], 201);
     }
 
     /**
