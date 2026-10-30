@@ -27,7 +27,7 @@ class ProjectController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Store a newly created project in storage.
      */
     public function store(Request $request)
     {
@@ -46,11 +46,14 @@ class ProjectController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * Display the specified project
      */
     public function show(Project $project)
     {
-        //
+        return response()->json([
+            'success' => true,
+            'data' => $project->load('projectCards.tasks')
+        ], 200);
     }
 
     /**
