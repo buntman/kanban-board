@@ -33,7 +33,7 @@ class ProjectCardController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:100',
-            'project_id' => 'required|integer|exists:projects,project_id'
+            'project_id' => 'required|integer|exists:projects,id'
         ]);
 
         $project_card = ProjectCard::create($validated);
