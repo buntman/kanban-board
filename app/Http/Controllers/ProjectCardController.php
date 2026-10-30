@@ -12,7 +12,10 @@ class ProjectCardController extends Controller
      */
     public function index()
     {
-        //
+        return response()->json([
+            'success' => true,
+            'data' => ProjectCard::with('tasks')->get()
+        ], 200);
     }
 
     /**
@@ -28,7 +31,18 @@ class ProjectCardController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string|max:100',
+            'project_id' => 'required|integer|exists:projects,project_id'
+        ]);
+
+        $project_card = ProjectCard::create($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Project card created successfully!',
+            'data' => $project_card
+        ], 201);
     }
 
     /**
