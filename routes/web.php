@@ -5,6 +5,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\ProjectCardController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -29,6 +30,10 @@ Route::controller(ProjectController::class)->group(function () {
     Route::get('/projects', 'index')->name('projects.index');
     Route::post('/projects', 'store')->name('projects.store');
     Route::get('/projects/{project}', 'show')->name('projects.show');
+});
+
+Route::controller(ProjectCardController::class)->group(function () {
+    Route::post('/projects/{project}/cards', 'store')->name('project-cards.store');
 });
 
 require __DIR__.'/auth.php';

@@ -16,12 +16,3 @@ Route::controller(ProjectController::class)->group(function () {
     Route::post('/projects', 'store');
     Route::get('/projects/{project}', 'show');
 });
-
-Route::controller(ProjectCardController::class)->group(function () {
-    Route::get('/project-cards', 'index');
-    Route::post('/project-cards', 'store');
-});
-
-Route::controller(TaskController::class)->group(function () {
-    Route::post('/tasks', 'store');
-});
