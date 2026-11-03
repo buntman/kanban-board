@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ProjectCard;
+use App\Models\Project;
 use Illuminate\Http\Request;
 
 class ProjectCardController extends Controller
@@ -29,20 +30,18 @@ class ProjectCardController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request, Project $project)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:100',
-            'project_id' => 'required|integer|exists:projects,id'
         ]);
 
-        $project_card = ProjectCard::create($validated);
+        $project->projectCards()->create([
+            'name' => $validated['name'],
+            'position' => ($project->projectCards()->max('position') ?? 0) + 1000,
+        ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Project card created successfully!',
-            'data' => $project_card
-        ], 201);
+        return to_route('projects.show', $project);
     }
 
     /**
