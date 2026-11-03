@@ -39,7 +39,7 @@ class ProjectController extends Controller
 
         $project = Project::create($validated);
 
-        return redirect()->route('projects.index');
+        return to_route('projects.show', $project); //redirects user to newly created project
     }
 
     /**
