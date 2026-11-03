@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
+use Inertia\Inertia;
 use Illuminate\Http\Request;
 
 class ProjectController extends Controller
@@ -12,10 +13,11 @@ class ProjectController extends Controller
      */
     public function index()
     {
-        return response()->json([
-            'success' => true,
-            'data' => Project::with('projectCards')->get()
-        ], 200);
+        $projects = Project::all();
+
+        return Inertia::render('Projects/Index', [
+            'projects' => $projects
+        ]);
     }
 
     /**
@@ -23,7 +25,6 @@ class ProjectController extends Controller
      */
     public function create()
     {
-        //
     }
 
     /**
@@ -38,11 +39,7 @@ class ProjectController extends Controller
 
         $project = Project::create($validated);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Project created successfully!',
-            'data' => $project
-        ], 201);
+        return redirect()->route('projects.index');
     }
 
     /**
