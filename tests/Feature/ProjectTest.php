@@ -1,0 +1,70 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\Project;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
+use Tests\TestCase;
+
+class ProjectTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_projects_index_lists_all_projects(): void
+    {
+        Project::create(['name' => 'Project Beta']);
+
+        $this->get('/projects')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Projects/Index')
+                ->has('projects', 1)
+                ->where('projects.0.name', 'Project Beta')
+            );
+    }
+
+    public function test_a_project_can_be_created(): void
+    {
+        $response = $this->post('/projects', [
+            'name' => 'Kanban Board',
+            'description' => 'Testing a feature',
+        ]);
+
+        $project = Project::where('name', 'Kanban Board')->firstOrFail();
+
+        $response->assertRedirect(route('projects.show', $project));
+
+        $this->assertDatabaseHas('projects', [
+            'name' => 'Kanban Board',
+            'description' => 'Testing a feature',
+        ]);
+    }
+
+    public function test_a_project_is_shown_with_its_cards_and_tasks(): void
+    {
+        $project = Project::create(['name' => 'Project Beta']);
+        $card = $project->projectCards()->create(['name' => 'MVP']);
+        $card->tasks()->create(['name' => 'Fix Login']);
+
+        $this->get(route('projects.show', $project))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Projects/Show')
+                ->where('project.id', $project->id)
+                ->where('project.name', 'Project Beta')
+                ->has('project.project_cards', 1)
+                ->where('project.project_cards.0.name', 'MVP')
+                ->has('project.project_cards.0.tasks', 1)
+                ->where('project.project_cards.0.tasks.0.name', 'Fix Login')
+            );
+    }
+
+    public function test_a_project_name_is_required(): void
+    {
+        $this->post('/projects', ['name' => ''])
+            ->assertSessionHasErrors('name');
+
+        $this->assertDatabaseCount('projects', 0);
+    }
+}
