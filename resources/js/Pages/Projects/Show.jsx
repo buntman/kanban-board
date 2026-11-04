@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useForm } from "@inertiajs/react";
+import TaskForm from "./Partials/TaskForm";
 
 export default function Show({ project }) {
     const [isCreatingCard, setIsCreatingCard] = useState(false);
@@ -86,10 +87,8 @@ export default function Show({ project }) {
                                 )}
                             </div>
 
-                            {/* Add Task Button */}
-                            <button className="mt-4 w-full py-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg text-sm font-medium transition">
-                                + Add a task
-                            </button>
+                            {/* Add Task */}
+                            <TaskForm card={card} />
                         </div>
                     ))}
 
