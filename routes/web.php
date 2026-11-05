@@ -39,6 +39,7 @@ Route::controller(ProjectCardController::class)->group(function () {
 
 Route::controller(TaskController::class)->group(function () {
     Route::post('/cards/{projectCard}/tasks', 'store')->name('tasks.store');
+    Route::patch('/tasks/{task}', 'update')->name('tasks.update');
 });
 
 require __DIR__.'/auth.php';

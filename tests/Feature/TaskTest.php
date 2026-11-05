@@ -68,4 +68,87 @@ class TaskTest extends TestCase
             'project_card_id' => $otherCard->id,
         ]);
     }
+
+    public function test_a_task_can_be_marked_as_complete(): void
+    {
+        $project = Project::create(['name' => 'Kanban Development']);
+        $card = $project->projectCards()->create(['name' => 'MVP']);
+        $task = $card->tasks()->create(['name' => 'Fix Login']);
+
+        $response = $this->patch(route('tasks.update', $task), [
+            'is_completed' => true,
+        ]);
+
+        $response->assertRedirect(route('projects.show', $project));
+
+        $this->assertDatabaseHas('tasks', [
+            'id' => $task->id,
+            'is_completed' => true,
+        ]);
+    }
+
+    public function test_a_task_can_be_marked_as_incomplete_again(): void
+    {
+        $project = Project::create(['name' => 'Kanban Development']);
+        $card = $project->projectCards()->create(['name' => 'MVP']);
+        $task = $card->tasks()->create([
+            'name' => 'Fix Login',
+            'is_completed' => true,
+        ]);
+
+        $this->patch(route('tasks.update', $task), [
+            'is_completed' => false,
+        ])->assertRedirect(route('projects.show', $project));
+
+        $this->assertDatabaseHas('tasks', [
+            'id' => $task->id,
+            'is_completed' => false,
+        ]);
+    }
+
+    public function test_is_completed_must_be_a_boolean(): void
+    {
+        $project = Project::create(['name' => 'Kanban Development']);
+        $card = $project->projectCards()->create(['name' => 'MVP']);
+        $task = $card->tasks()->create(['name' => 'Fix Login']);
+
+        $this->patch(route('tasks.update', $task), [
+            'is_completed' => 'not-a-boolean',
+        ])->assertSessionHasErrors('is_completed');
+
+        $this->assertDatabaseHas('tasks', [
+            'id' => $task->id,
+            'is_completed' => false,
+        ]);
+    }
+
+    public function test_marking_a_task_complete_does_not_change_other_fields(): void
+    {
+        $project = Project::create(['name' => 'Kanban Development']);
+        $card = $project->projectCards()->create(['name' => 'MVP']);
+        $task = $card->tasks()->create([
+            'name' => 'Fix Login',
+            'description' => 'Investigate the login flow',
+            'position' => 1000,
+        ]);
+
+        $this->patch(route('tasks.update', $task), [
+            'is_completed' => true,
+        ]);
+
+        $task->refresh();
+
+        $this->assertTrue($task->is_completed);
+        $this->assertSame('Fix Login', $task->name);
+        $this->assertSame('Investigate the login flow', $task->description);
+        $this->assertEquals(1000, $task->position);
+        $this->assertSame($card->id, $task->project_card_id);
+    }
+
+    public function test_updating_a_missing_task_returns_not_found(): void
+    {
+        $this->patch(route('tasks.update', 999999), [
+            'is_completed' => true,
+        ])->assertNotFound();
+    }
 }

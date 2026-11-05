@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useForm } from "@inertiajs/react";
 import TaskForm from "./Partials/TaskForm";
+import TaskItem from "./Partials/Item";
 
 export default function Show({ project }) {
     const [isCreatingCard, setIsCreatingCard] = useState(false);
@@ -64,20 +65,8 @@ export default function Show({ project }) {
                             <div className="flex-1 overflow-y-auto space-y-3 pr-1">
                                 {card.tasks &&
                                     card.tasks.map((task) => (
-                                        <div
-                                            key={task.id}
-                                            className="bg-white p-4 rounded-lg shadow-sm border hover:shadow transition"
-                                        >
-                                            <h4 className="font-medium text-gray-800 text-sm">
-                                                {task.name}
-                                            </h4>
-                                            <p className="text-gray-400 text-xs mt-1">
-                                                {task.description ||
-                                                    "No Description"}
-                                            </p>
-                                        </div>
+                                        <TaskItem key={task.id} task={task} />
                                     ))}
-
                                 {(!card.tasks || card.tasks.length === 0) && (
                                     <div className="text-center py-6 border-2 border-dashed border-gray-200 rounded-lg">
                                         <p className="text-xs text-gray-400">

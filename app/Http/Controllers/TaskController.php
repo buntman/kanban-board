@@ -62,7 +62,13 @@ class TaskController extends Controller
      */
     public function update(Request $request, Task $task)
     {
-        //
+        $validated = $request->validate([
+            'is_completed' => 'required|boolean'
+        ]);
+
+        $task->update(['is_completed' => $validated['is_completed']]);
+
+        return to_route('projects.show', $task->projectCard->project);
     }
 
     /**
