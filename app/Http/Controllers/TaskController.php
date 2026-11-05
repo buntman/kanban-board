@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Task;
 use Illuminate\Http\Request;
+use App\Models\ProjectCard;
 
 class TaskController extends Controller
 {
@@ -26,20 +27,18 @@ class TaskController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request, ProjectCard $projectCard)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:100',
-            'project_card_id' => 'required|integer|exists:project_cards,id'
         ]);
 
-        $task = Task::create($validated);
+        $projectCard->tasks()->create([
+            'name' => $validated['name'],
+            'position' => ($projectCard->tasks()->max('position') ?? 0 ) + 1000,
+        ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Task created successfully!',
-            'data' => $task
-        ], 201);
+        return to_route('projects.show', $projectCard->project);
     }
 
     /**
@@ -63,7 +62,13 @@ class TaskController extends Controller
      */
     public function update(Request $request, Task $task)
     {
-        //
+        $validated = $request->validate([
+            'is_completed' => 'required|boolean'
+        ]);
+
+        $task->update(['is_completed' => $validated['is_completed']]);
+
+        return to_route('projects.show', $task->projectCard->project);
     }
 
     /**

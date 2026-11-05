@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectCardController;
+use App\Http\Controllers\TaskController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -34,6 +35,11 @@ Route::controller(ProjectController::class)->group(function () {
 
 Route::controller(ProjectCardController::class)->group(function () {
     Route::post('/projects/{project}/cards', 'store')->name('project-cards.store');
+});
+
+Route::controller(TaskController::class)->group(function () {
+    Route::post('/cards/{projectCard}/tasks', 'store')->name('tasks.store');
+    Route::patch('/tasks/{task}', 'update')->name('tasks.update');
 });
 
 require __DIR__.'/auth.php';
