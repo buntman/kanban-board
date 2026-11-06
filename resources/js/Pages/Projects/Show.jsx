@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useForm } from "@inertiajs/react";
 import TaskForm from "./Partials/TaskForm";
 import TaskItem from "./Partials/Item";
+import CardMenu from "./Partials/CardMenu";
 
 export default function Show({ project }) {
     const [isCreatingCard, setIsCreatingCard] = useState(false);
@@ -56,9 +57,12 @@ export default function Show({ project }) {
                                 <h3 className="font-semibold text-gray-700">
                                     {card.name}
                                 </h3>
-                                <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full font-medium">
-                                    {card.tasks ? card.tasks.length : 0}
-                                </span>
+                                <div className="flex items-center space-x-2">
+                                    <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full font-medium">
+                                        {card.tasks ? card.tasks.length : 0}
+                                    </span>
+                                    <CardMenu card={card} />
+                                </div>
                             </div>
 
                             {/* Tasks List (Vertical Scroll if too many) */}

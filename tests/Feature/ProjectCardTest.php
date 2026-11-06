@@ -64,4 +64,35 @@ class ProjectCardTest extends TestCase
             'project_id' => $other->id,
         ]);
     }
+
+    public function test_a_card_can_be_renamed(): void
+    {
+        $project = Project::create(['name' => 'Kanban Development']);
+        $card = $project->projectCards()->create(['name' => 'MVP']);
+
+        $response = $this->patch(route('project-cards.update', $card), [
+            'name' => 'In Progress',
+        ]);
+
+        $response->assertRedirect(route('projects.show', $project));
+
+        $this->assertDatabaseHas('project_cards', [
+            'id' => $card->id,
+            'name' => 'In Progress',
+        ]);
+    }
+
+    public function test_a_card_name_is_required_when_renaming(): void
+    {
+        $project = Project::create(['name' => 'Kanban Development']);
+        $card = $project->projectCards()->create(['name' => 'MVP']);
+
+        $this->patch(route('project-cards.update', $card), ['name' => ''])
+            ->assertSessionHasErrors('name');
+
+        $this->assertDatabaseHas('project_cards', [
+            'id' => $card->id,
+            'name' => 'MVP',
+        ]);
+    }
 }
