@@ -65,7 +65,13 @@ class ProjectCardController extends Controller
      */
     public function update(Request $request, ProjectCard $projectCard)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string|max:100',
+        ]);
+
+        $projectCard->update($validated);
+
+        return to_route('projects.show', $projectCard->project);
     }
 
     /**
