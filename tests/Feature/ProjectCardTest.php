@@ -105,4 +105,31 @@ class ProjectCardTest extends TestCase
             'name' => 'MVP',
         ]);
     }
+
+    public function test_a_user_cannot_add_a_card_to_another_users_project(): void
+    {
+        $theirs = User::factory()->create()->projects()->create(['name' => 'Theirs']);
+
+        $this->post(route('project-cards.store', $theirs), ['name' => 'Hack'])
+            ->assertForbidden();
+
+        $this->assertDatabaseCount('project_cards', 0);
+    }
+
+    public function test_a_user_cannot_rename_another_users_card(): void
+    {
+        $card = User::factory()->create()
+            ->projects()
+            ->create(['name' => 'Theirs'])
+            ->projectCards()
+            ->create(['name' => 'Original']);
+
+        $this->patch(route('project-cards.update', $card), ['name' => 'Hacked'])
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('project_cards', [
+            'id' => $card->id,
+            'name' => 'Original',
+        ]);
+    }
 }

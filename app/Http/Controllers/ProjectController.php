@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Project;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class ProjectController extends Controller
 {
@@ -47,6 +48,7 @@ class ProjectController extends Controller
      */
     public function show(Project $project)
     {
+        Gate::authorize('view', $project);
         $project->load('projectCards.tasks');
 
         return Inertia::render('Projects/Show', [

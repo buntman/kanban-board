@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Project extends Model
 {
-    protected $guarded = []; // can change into fillable later on
+    protected $fillable = ['name', 'description'];
 
     public function projectCards(): HasMany
     {
