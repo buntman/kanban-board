@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ProjectCard;
 use App\Models\Project;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class ProjectCardController extends Controller
 {
@@ -32,6 +33,7 @@ class ProjectCardController extends Controller
      */
     public function store(Request $request, Project $project)
     {
+        Gate::authorize('update', $project);
         $validated = $request->validate([
             'name' => 'required|string|max:100',
         ]);
@@ -65,6 +67,7 @@ class ProjectCardController extends Controller
      */
     public function update(Request $request, ProjectCard $projectCard)
     {
+        Gate::authorize('update', $projectCard->project);
         $validated = $request->validate([
             'name' => 'required|string|max:100',
         ]);

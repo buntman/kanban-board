@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Task;
 use Illuminate\Http\Request;
 use App\Models\ProjectCard;
+use Illuminate\Support\Facades\Gate;
 
 class TaskController extends Controller
 {
@@ -29,6 +30,7 @@ class TaskController extends Controller
      */
     public function store(Request $request, ProjectCard $projectCard)
     {
+        Gate::authorize('update', $projectCard->project);
         $validated = $request->validate([
             'name' => 'required|string|max:100',
         ]);
@@ -62,6 +64,7 @@ class TaskController extends Controller
      */
     public function update(Request $request, Task $task)
     {
+        Gate::authorize('update', $task->projectCard->project);
         $validated = $request->validate([
             'is_completed' => 'required|boolean'
         ]);
