@@ -9,10 +9,3 @@ use App\Http\Controllers\TaskController;
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
-
-
-Route::controller(ProjectController::class)->group(function () {
-    Route::get('/projects', 'index');
-    Route::post('/projects', 'store');
-    Route::get('/projects/{project}', 'show');
-});

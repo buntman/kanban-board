@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Models\Project;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -10,9 +10,19 @@ class TaskTest extends TestCase
 {
     use RefreshDatabase;
 
+    private User $user;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->user = User::factory()->create();
+        $this->actingAs($this->user);
+    }
+
     public function test_a_task_can_be_created_for_a_card(): void
     {
-        $project = Project::create(['name' => 'Kanban Development']);
+        $project = $this->user->projects()->create(['name' => 'Kanban Development']);
         $card = $project->projectCards()->create(['name' => 'MVP']);
 
         $response = $this->post(route('tasks.store', $card), [
@@ -30,7 +40,7 @@ class TaskTest extends TestCase
 
     public function test_task_positions_increment_by_1000(): void
     {
-        $project = Project::create(['name' => 'Kanban Development']);
+        $project = $this->user->projects()->create(['name' => 'Kanban Development']);
         $card = $project->projectCards()->create(['name' => 'MVP']);
 
         $this->post(route('tasks.store', $card), ['name' => 'First Task']);
@@ -42,7 +52,7 @@ class TaskTest extends TestCase
 
     public function test_a_task_name_is_required(): void
     {
-        $project = Project::create(['name' => 'Kanban Development']);
+        $project = $this->user->projects()->create(['name' => 'Kanban Development']);
         $card = $project->projectCards()->create(['name' => 'MVP']);
 
         $this->post(route('tasks.store', $card), ['name' => ''])
@@ -53,7 +63,7 @@ class TaskTest extends TestCase
 
     public function test_a_task_belongs_to_the_card_in_the_url(): void
     {
-        $project = Project::create(['name' => 'Kanban Development']);
+        $project = $this->user->projects()->create(['name' => 'Kanban Development']);
         $card = $project->projectCards()->create(['name' => 'MVP']);
         $otherCard = $project->projectCards()->create(['name' => 'Done']);
 
@@ -71,7 +81,7 @@ class TaskTest extends TestCase
 
     public function test_a_task_can_be_marked_as_complete(): void
     {
-        $project = Project::create(['name' => 'Kanban Development']);
+        $project = $this->user->projects()->create(['name' => 'Kanban Development']);
         $card = $project->projectCards()->create(['name' => 'MVP']);
         $task = $card->tasks()->create(['name' => 'Fix Login']);
 
@@ -89,7 +99,7 @@ class TaskTest extends TestCase
 
     public function test_a_task_can_be_marked_as_incomplete_again(): void
     {
-        $project = Project::create(['name' => 'Kanban Development']);
+        $project = $this->user->projects()->create(['name' => 'Kanban Development']);
         $card = $project->projectCards()->create(['name' => 'MVP']);
         $task = $card->tasks()->create([
             'name' => 'Fix Login',
@@ -108,7 +118,7 @@ class TaskTest extends TestCase
 
     public function test_is_completed_must_be_a_boolean(): void
     {
-        $project = Project::create(['name' => 'Kanban Development']);
+        $project = $this->user->projects()->create(['name' => 'Kanban Development']);
         $card = $project->projectCards()->create(['name' => 'MVP']);
         $task = $card->tasks()->create(['name' => 'Fix Login']);
 
@@ -124,7 +134,7 @@ class TaskTest extends TestCase
 
     public function test_marking_a_task_complete_does_not_change_other_fields(): void
     {
-        $project = Project::create(['name' => 'Kanban Development']);
+        $project = $this->user->projects()->create(['name' => 'Kanban Development']);
         $card = $project->projectCards()->create(['name' => 'MVP']);
         $task = $card->tasks()->create([
             'name' => 'Fix Login',
