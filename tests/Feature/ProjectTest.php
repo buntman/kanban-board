@@ -82,4 +82,12 @@ class ProjectTest extends TestCase
 
         $this->assertDatabaseCount('projects', 0);
     }
+
+    public function test_a_user_cannot_view_another_users_project(): void
+    {
+        $theirs = User::factory()->create()->projects()->create(['name' => 'Theirs']);
+
+        $this->get(route('projects.show', $theirs))
+            ->assertForbidden();
+    }
 }

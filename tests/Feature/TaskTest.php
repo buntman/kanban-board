@@ -161,4 +161,34 @@ class TaskTest extends TestCase
             'is_completed' => true,
         ])->assertNotFound();
     }
+
+    public function test_a_user_cannot_add_a_task_to_another_users_card(): void
+    {
+        $card = User::factory()->create()
+            ->projects()
+            ->create(['name' => 'Theirs'])
+            ->projectCards()
+            ->create(['name' => 'MVP']);
+
+        $this->post(route('tasks.store', $card), ['name' => 'Hack'])
+            ->assertForbidden();
+
+        $this->assertDatabaseCount('tasks', 0);
+    }
+
+    public function test_a_user_cannot_toggle_another_users_task(): void
+    {
+        $task = User::factory()->create()
+            ->projects()
+            ->create(['name' => 'Theirs'])
+            ->projectCards()
+            ->create(['name' => 'MVP'])
+            ->tasks()
+            ->create(['name' => 'Fix Login']);
+
+        $this->patch(route('tasks.update', $task), ['is_completed' => true])
+            ->assertForbidden();
+
+        $this->assertFalse($task->fresh()->is_completed);
+    }
 }
