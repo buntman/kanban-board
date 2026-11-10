@@ -11,9 +11,9 @@ class ProjectController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $projects = Project::all();
+        $projects = $request->user()->projects()->latest()->get();
 
         return Inertia::render('Projects/Index', [
             'projects' => $projects
@@ -37,7 +37,7 @@ class ProjectController extends Controller
             'description' => 'nullable|string'
         ]);
 
-        $project = Project::create($validated);
+        $project = $request->user()->projects()->create($validated);
 
         return to_route('projects.show', $project); //redirects user to newly created project
     }
