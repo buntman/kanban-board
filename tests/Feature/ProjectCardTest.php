@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Models\Project;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -10,9 +10,19 @@ class ProjectCardTest extends TestCase
 {
     use RefreshDatabase;
 
+    private User $user;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->user = User::factory()->create();
+        $this->actingAs($this->user);
+    }
+
     public function test_a_card_can_be_created_for_a_project(): void
     {
-        $project = Project::create(['name' => 'Kanban Development']);
+        $project = $this->user->projects()->create(['name' => 'Kanban Development']);
 
         $response = $this->post(route('project-cards.store', $project), [
             'name' => 'MVP',
@@ -29,7 +39,7 @@ class ProjectCardTest extends TestCase
 
     public function test_card_positions_increment_by_1000(): void
     {
-        $project = Project::create(['name' => 'Kanban Development']);
+        $project = $this->user->projects()->create(['name' => 'Kanban Development']);
 
         $this->post(route('project-cards.store', $project), ['name' => 'Backlog']);
         $this->post(route('project-cards.store', $project), ['name' => 'In Progress']);
@@ -40,7 +50,7 @@ class ProjectCardTest extends TestCase
 
     public function test_a_card_name_is_required(): void
     {
-        $project = Project::create(['name' => 'Kanban Development']);
+        $project = $this->user->projects()->create(['name' => 'Kanban Development']);
 
         $this->post(route('project-cards.store', $project), ['name' => ''])
             ->assertSessionHasErrors('name');
@@ -50,8 +60,8 @@ class ProjectCardTest extends TestCase
 
     public function test_a_card_belongs_to_the_project_in_the_url(): void
     {
-        $project = Project::create(['name' => 'Project A']);
-        $other = Project::create(['name' => 'Project B']);
+        $project = $this->user->projects()->create(['name' => 'Project A']);
+        $other = $this->user->projects()->create(['name' => 'Project B']);
 
         $this->post(route('project-cards.store', $project), ['name' => 'MVP']);
 
@@ -67,7 +77,7 @@ class ProjectCardTest extends TestCase
 
     public function test_a_card_can_be_renamed(): void
     {
-        $project = Project::create(['name' => 'Kanban Development']);
+        $project = $this->user->projects()->create(['name' => 'Kanban Development']);
         $card = $project->projectCards()->create(['name' => 'MVP']);
 
         $response = $this->patch(route('project-cards.update', $card), [
@@ -84,7 +94,7 @@ class ProjectCardTest extends TestCase
 
     public function test_a_card_name_is_required_when_renaming(): void
     {
-        $project = Project::create(['name' => 'Kanban Development']);
+        $project = $this->user->projects()->create(['name' => 'Kanban Development']);
         $card = $project->projectCards()->create(['name' => 'MVP']);
 
         $this->patch(route('project-cards.update', $card), ['name' => ''])

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Project;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
@@ -11,15 +12,27 @@ class ProjectTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_projects_index_lists_all_projects(): void
+    private User $user;
+
+    protected function setUp(): void
     {
-        Project::create(['name' => 'Project Beta']);
+        parent::setUp();
+
+        $this->user = User::factory()->create();
+        $this->actingAs($this->user);
+    }
+
+    public function test_projects_index_lists_only_the_authenticated_users_projects(): void
+    {
+        $project = $this->user->projects()->create(['name' => 'Project Beta']);
+        User::factory()->create()->projects()->create(['name' => 'Someone Else']);
 
         $this->get('/projects')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Projects/Index')
                 ->has('projects', 1)
+                ->where('projects.0.id', $project->id)
                 ->where('projects.0.name', 'Project Beta')
             );
     }
@@ -31,19 +44,21 @@ class ProjectTest extends TestCase
             'description' => 'Testing a feature',
         ]);
 
-        $project = Project::where('name', 'Kanban Board')->firstOrFail();
+        $project = $this->user->projects()->where('name', 'Kanban Board')->firstOrFail();
 
         $response->assertRedirect(route('projects.show', $project));
 
         $this->assertDatabaseHas('projects', [
+            'id' => $project->id,
             'name' => 'Kanban Board',
             'description' => 'Testing a feature',
+            'user_id' => $this->user->id,
         ]);
     }
 
     public function test_a_project_is_shown_with_its_cards_and_tasks(): void
     {
-        $project = Project::create(['name' => 'Project Beta']);
+        $project = $this->user->projects()->create(['name' => 'Project Beta']);
         $card = $project->projectCards()->create(['name' => 'MVP']);
         $card->tasks()->create(['name' => 'Fix Login']);
 
