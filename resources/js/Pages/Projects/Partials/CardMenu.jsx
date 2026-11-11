@@ -1,6 +1,6 @@
 import Dropdown from "@/Components/Dropdown";
 
-export default function CardMenu({ onRename }) {
+export default function CardMenu({ onRename, onDelete }) {
     return (
         <Dropdown>
             <Dropdown.Trigger>
@@ -32,6 +32,13 @@ export default function CardMenu({ onRename }) {
                     className="block w-full px-4 py-2 text-start text-sm text-gray-700 hover:bg-gray-100 transition"
                 >
                     Rename card
+                </button>
+                <button
+                    type="button"
+                    onClick={onDelete}
+                    className="block w-full px-4 py-2 text-start text-sm text-red-600 hover:bg-red-50 transition"
+                >
+                    Delete card
                 </button>
             </Dropdown.Content>
         </Dropdown>

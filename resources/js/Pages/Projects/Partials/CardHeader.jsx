@@ -3,7 +3,7 @@ import { useForm } from "@inertiajs/react";
 import CardMenu from "./CardMenu";
 import InputError from "@/Components/InputError";
 
-export default function CardHeader({ card }) {
+export default function CardHeader({ card, onDelete }) {
     const [isEditing, setIsEditing] = useState(false);
 
     const { data, setData, patch, processing, errors, reset, clearErrors } =
@@ -93,7 +93,10 @@ export default function CardHeader({ card }) {
                         {card.name}
                     </h3>
                     <div className="flex items-center space-x-2 flex-shrink-0">
-                        <CardMenu onRename={startEditing} />
+                        <CardMenu
+                            onRename={startEditing}
+                            onDelete={onDelete}
+                        />
                     </div>
                 </>
             )}
