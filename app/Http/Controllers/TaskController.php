@@ -79,6 +79,11 @@ class TaskController extends Controller
      */
     public function destroy(Task $task)
     {
-        //
+        Gate::authorize('update', $task->projectCard->project);
+
+        $project = $task->projectCard->project;
+        $task->delete();
+
+        return to_route('projects.show', $project);
     }
 }

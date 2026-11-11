@@ -35,6 +35,7 @@ class GuestAccessTest extends TestCase
         $this->post(route('tasks.store', $card), ['name' => 'Hack'])->assertRedirect(route('login'));
         $this->patch(route('tasks.update', $task), ['is_completed' => true])->assertRedirect(route('login'));
         $this->delete(route('project-cards.destroy', $card))->assertRedirect(route('login'));
+        $this->delete(route('tasks.destroy', $task))->assertRedirect(route('login'));
 
         $this->assertDatabaseCount('projects', 1);
         $this->assertDatabaseCount('project_cards', 1);

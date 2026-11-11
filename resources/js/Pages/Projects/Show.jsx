@@ -9,6 +9,8 @@ export default function Show({ project }) {
     const [isCreatingCard, setIsCreatingCard] = useState(false);
     const [cardToDelete, setCardToDelete] = useState(null);
     const [isDeletingCard, setIsDeletingCard] = useState(false);
+    const [taskToDelete, setTaskToDelete] = useState(null);
+    const [isDeletingTask, setIsDeletingTask] = useState(false);
 
     const { data, setData, post, processing, errors, reset } = useForm({
         name: "",
@@ -36,6 +38,19 @@ export default function Show({ project }) {
             onStart: () => setIsDeletingCard(true),
             onFinish: () => setIsDeletingCard(false),
             onSuccess: () => setCardToDelete(null),
+        });
+    };
+
+    const deleteTask = () => {
+        if (!taskToDelete) {
+            return;
+        }
+
+        router.delete(route("tasks.destroy", taskToDelete.id), {
+            preserveScroll: true,
+            onStart: () => setIsDeletingTask(true),
+            onFinish: () => setIsDeletingTask(false),
+            onSuccess: () => setTaskToDelete(null),
         });
     };
 
@@ -78,7 +93,13 @@ export default function Show({ project }) {
                             <div className="flex-1 overflow-y-auto space-y-3 pr-1">
                                 {card.tasks &&
                                     card.tasks.map((task) => (
-                                        <TaskItem key={task.id} task={task} />
+                                        <TaskItem
+                                            key={task.id}
+                                            task={task}
+                                            onDelete={() =>
+                                                setTaskToDelete(task)
+                                            }
+                                        />
                                     ))}
                                 {(!card.tasks || card.tasks.length === 0) && (
                                     <div className="text-center py-6 border-2 border-dashed border-gray-200 rounded-lg">
@@ -182,6 +203,20 @@ export default function Show({ project }) {
                 processing={isDeletingCard}
                 onConfirm={deleteCard}
                 onClose={() => setCardToDelete(null)}
+            />
+
+            <ConfirmDialog
+                show={!!taskToDelete}
+                title="Delete task?"
+                message={
+                    taskToDelete
+                        ? `"${taskToDelete.name}" will be permanently deleted.`
+                        : ""
+                }
+                confirmLabel="Delete task"
+                processing={isDeletingTask}
+                onConfirm={deleteTask}
+                onClose={() => setTaskToDelete(null)}
             />
         </div>
     );
