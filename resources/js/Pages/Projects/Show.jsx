@@ -1,11 +1,14 @@
 import React, { useState } from "react";
-import { Link, useForm } from "@inertiajs/react";
+import { Link, router, useForm } from "@inertiajs/react";
 import TaskForm from "./Partials/TaskForm";
 import TaskItem from "./Partials/Item";
 import CardHeader from "./Partials/CardHeader";
+import ConfirmDialog from "@/Components/ConfirmDialog";
 
 export default function Show({ project }) {
     const [isCreatingCard, setIsCreatingCard] = useState(false);
+    const [cardToDelete, setCardToDelete] = useState(null);
+    const [isDeletingCard, setIsDeletingCard] = useState(false);
 
     const { data, setData, post, processing, errors, reset } = useForm({
         name: "",
@@ -20,6 +23,19 @@ export default function Show({ project }) {
                 reset(); // Clears the input field
                 setIsCreatingCard(false); // Closes the form popup
             },
+        });
+    };
+
+    const deleteCard = () => {
+        if (!cardToDelete) {
+            return;
+        }
+
+        router.delete(route("project-cards.destroy", cardToDelete.id), {
+            preserveScroll: true,
+            onStart: () => setIsDeletingCard(true),
+            onFinish: () => setIsDeletingCard(false),
+            onSuccess: () => setCardToDelete(null),
         });
     };
 
@@ -53,7 +69,10 @@ export default function Show({ project }) {
                             className="w-80 bg-gray-100 rounded-xl p-4 flex-shrink-0 flex flex-col max-h-[80vh] shadow-sm border"
                         >
                             {/* Column Header */}
-                            <CardHeader card={card} />
+                            <CardHeader
+                                card={card}
+                                onDelete={() => setCardToDelete(card)}
+                            />
 
                             {/* Tasks List (Vertical Scroll if too many) */}
                             <div className="flex-1 overflow-y-auto space-y-3 pr-1">
@@ -82,7 +101,7 @@ export default function Show({ project }) {
                             onClick={() => setIsCreatingCard(true)}
                             className="w-full bg-white/60 hover:bg-white border-2 border-dashed border-gray-300 hover:border-gray-400 rounded-xl p-4 text-gray-600 font-medium text-sm flex items-center justify-center transition shadow-sm"
                         >
-                            + New Card (Column)
+                            + New Card
                         </button>
                     ) : (
                         /* STATE B: The popup/slide-down form */
@@ -144,6 +163,26 @@ export default function Show({ project }) {
                     )}
                 </div>
             </main>
+
+            <ConfirmDialog
+                show={!!cardToDelete}
+                title="Delete column?"
+                message={
+                    cardToDelete
+                        ? `"${cardToDelete.name}" and its ${
+                              cardToDelete.tasks?.length ?? 0
+                          } ${
+                              (cardToDelete.tasks?.length ?? 0) === 1
+                                  ? "task"
+                                  : "tasks"
+                          } will be permanently deleted.`
+                        : ""
+                }
+                confirmLabel="Delete column"
+                processing={isDeletingCard}
+                onConfirm={deleteCard}
+                onClose={() => setCardToDelete(null)}
+            />
         </div>
     );
 }

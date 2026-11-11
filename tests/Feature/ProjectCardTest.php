@@ -132,4 +132,32 @@ class ProjectCardTest extends TestCase
             'name' => 'Original',
         ]);
     }
+
+    public function test_a_card_and_its_tasks_are_deleted(): void
+    {
+        $project = $this->user->projects()->create(['name' => 'Kanban Development']);
+        $card = $project->projectCards()->create(['name' => 'MVP']);
+        $task = $card->tasks()->create(['name' => 'Fix Login']);
+
+        $this->delete(route('project-cards.destroy', $card))
+            ->assertRedirect(route('projects.show', $project));
+
+        $this->assertDatabaseMissing('project_cards', ['id' => $card->id]);
+        $this->assertDatabaseMissing('tasks', ['id' => $task->id]);
+        $this->assertDatabaseHas('projects', ['id' => $project->id]);
+    }
+
+    public function test_a_user_cannot_delete_another_users_card(): void
+    {
+        $card = User::factory()->create()
+            ->projects()
+            ->create(['name' => 'Theirs'])
+            ->projectCards()
+            ->create(['name' => 'MVP']);
+
+        $this->delete(route('project-cards.destroy', $card))
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('project_cards', ['id' => $card->id]);
+    }
 }

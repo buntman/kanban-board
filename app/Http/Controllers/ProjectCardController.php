@@ -82,6 +82,11 @@ class ProjectCardController extends Controller
      */
     public function destroy(ProjectCard $projectCard)
     {
-        //
+        Gate::authorize('delete', $projectCard->project);
+
+        $project = $projectCard->project;
+        $projectCard->delete();
+
+        return to_route('projects.show', $project);
     }
 }
