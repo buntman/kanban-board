@@ -41,6 +41,7 @@ Route::controller(ProjectCardController::class)->group(function () {
 Route::controller(TaskController::class)->group(function () {
     Route::post('/cards/{projectCard}/tasks', 'store')->name('tasks.store');
     Route::patch('/tasks/{task}', 'update')->name('tasks.update');
+    Route::delete('/tasks/{task}', 'destroy')->name('tasks.destroy');
 });
 });
 

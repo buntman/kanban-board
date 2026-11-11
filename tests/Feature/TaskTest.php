@@ -162,6 +162,40 @@ class TaskTest extends TestCase
         ])->assertNotFound();
     }
 
+    public function test_a_task_can_be_deleted(): void
+    {
+        $project = $this->user->projects()->create(['name' => 'Kanban Development']);
+        $card = $project->projectCards()->create(['name' => 'MVP']);
+        $task = $card->tasks()->create(['name' => 'Fix Login']);
+
+        $this->delete(route('tasks.destroy', $task))
+            ->assertRedirect(route('projects.show', $project));
+
+        $this->assertDatabaseMissing('tasks', ['id' => $task->id]);
+        $this->assertDatabaseHas('project_cards', ['id' => $card->id]);
+        $this->assertDatabaseHas('projects', ['id' => $project->id]);
+    }
+
+    public function test_deleting_a_missing_task_returns_not_found(): void
+    {
+        $this->delete(route('tasks.destroy', 999999))->assertNotFound();
+    }
+
+    public function test_a_user_cannot_delete_another_users_task(): void
+    {
+        $task = User::factory()->create()
+            ->projects()
+            ->create(['name' => 'Theirs'])
+            ->projectCards()
+            ->create(['name' => 'MVP'])
+            ->tasks()
+            ->create(['name' => 'Fix Login']);
+
+        $this->delete(route('tasks.destroy', $task))->assertForbidden();
+
+        $this->assertDatabaseHas('tasks', ['id' => $task->id]);
+    }
+
     public function test_a_user_cannot_add_a_task_to_another_users_card(): void
     {
         $card = User::factory()->create()
