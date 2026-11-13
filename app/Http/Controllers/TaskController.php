@@ -66,10 +66,12 @@ class TaskController extends Controller
     {
         Gate::authorize('update', $task->projectCard->project);
         $validated = $request->validate([
-            'is_completed' => 'required|boolean'
+            'name' => 'sometimes|required|string|max:100',
+            'description' => 'sometimes|nullable|string|max:2000',
+            'is_completed' => 'sometimes|required|boolean'
         ]);
 
-        $task->update(['is_completed' => $validated['is_completed']]);
+        $task->update($validated);
 
         return to_route('projects.show', $task->projectCard->project);
     }
