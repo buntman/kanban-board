@@ -41,6 +41,8 @@ class GuestAccessTest extends TestCase
         $this->assertDatabaseCount('project_cards', 1);
         $this->assertDatabaseHas('tasks', [
             'id' => $task->id,
+            'name' => 'Fix Login',
+            'description' => null,
             'is_completed' => false,
         ]);
     }

@@ -26,20 +26,15 @@ export default function CardMenu({ onRename, onDelete }) {
             </Dropdown.Trigger>
 
             <Dropdown.Content width="48">
-                <button
-                    type="button"
-                    onClick={onRename}
-                    className="block w-full px-4 py-2 text-start text-sm text-gray-700 hover:bg-gray-100 transition"
-                >
+                <Dropdown.Item onClick={onRename} className="text-gray-700">
                     Rename card
-                </button>
-                <button
-                    type="button"
+                </Dropdown.Item>
+                <Dropdown.Item
                     onClick={onDelete}
-                    className="block w-full px-4 py-2 text-start text-sm text-red-600 hover:bg-red-50 transition"
+                    className="text-red-600 hover:bg-red-50 data-[focus]:!bg-red-50"
                 >
                     Delete card
-                </button>
+                </Dropdown.Item>
             </Dropdown.Content>
         </Dropdown>
     );

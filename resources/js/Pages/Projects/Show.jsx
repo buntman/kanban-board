@@ -4,6 +4,7 @@ import TaskForm from "./Partials/TaskForm";
 import TaskItem from "./Partials/Item";
 import CardHeader from "./Partials/CardHeader";
 import ConfirmDialog from "@/Components/ConfirmDialog";
+import TaskDetailsModal from "./Partials/TaskDetailsModal";
 
 export default function Show({ project }) {
     const [isCreatingCard, setIsCreatingCard] = useState(false);
@@ -11,6 +12,7 @@ export default function Show({ project }) {
     const [isDeletingCard, setIsDeletingCard] = useState(false);
     const [taskToDelete, setTaskToDelete] = useState(null);
     const [isDeletingTask, setIsDeletingTask] = useState(false);
+    const [taskToEdit, setTaskToEdit] = useState(null);
 
     const { data, setData, post, processing, errors, reset } = useForm({
         name: "",
@@ -96,6 +98,7 @@ export default function Show({ project }) {
                                         <TaskItem
                                             key={task.id}
                                             task={task}
+                                            onEdit={() => setTaskToEdit(task)}
                                             onDelete={() =>
                                                 setTaskToDelete(task)
                                             }
@@ -218,6 +221,13 @@ export default function Show({ project }) {
                 onConfirm={deleteTask}
                 onClose={() => setTaskToDelete(null)}
             />
+
+            {taskToEdit && (
+                <TaskDetailsModal
+                    task={taskToEdit}
+                    onClose={() => setTaskToEdit(null)}
+                />
+            )}
         </div>
     );
 }
