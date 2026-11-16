@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ProjectCard;
 use App\Models\Project;
+use App\Models\ProjectCard;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
@@ -16,7 +16,7 @@ class ProjectCardController extends Controller
     {
         return response()->json([
             'success' => true,
-            'data' => ProjectCard::with('tasks')->get()
+            'data' => ProjectCard::with('tasks')->get(),
         ], 200);
     }
 

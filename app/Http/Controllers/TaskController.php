@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ProjectCard;
 use App\Models\Task;
 use Illuminate\Http\Request;
-use App\Models\ProjectCard;
 use Illuminate\Support\Facades\Gate;
 
 class TaskController extends Controller
@@ -37,7 +37,7 @@ class TaskController extends Controller
 
         $projectCard->tasks()->create([
             'name' => $validated['name'],
-            'position' => ($projectCard->tasks()->max('position') ?? 0 ) + 1000,
+            'position' => ($projectCard->tasks()->max('position') ?? 0) + 1000,
         ]);
 
         return to_route('projects.show', $projectCard->project);
@@ -68,7 +68,7 @@ class TaskController extends Controller
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:100',
             'description' => 'sometimes|nullable|string|max:2000',
-            'is_completed' => 'sometimes|required|boolean'
+            'is_completed' => 'sometimes|required|boolean',
         ]);
 
         $task->update($validated);

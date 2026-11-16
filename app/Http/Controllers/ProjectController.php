@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
-use Inertia\Inertia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Inertia\Inertia;
 
 class ProjectController extends Controller
 {
@@ -17,16 +17,14 @@ class ProjectController extends Controller
         $projects = $request->user()->projects()->latest()->get();
 
         return Inertia::render('Projects/Index', [
-            'projects' => $projects
+            'projects' => $projects,
         ]);
     }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
-    {
-    }
+    public function create() {}
 
     /**
      * Store a newly created project in storage.
@@ -35,12 +33,12 @@ class ProjectController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:100',
-            'description' => 'nullable|string'
+            'description' => 'nullable|string',
         ]);
 
         $project = $request->user()->projects()->create($validated);
 
-        return to_route('projects.show', $project); //redirects user to newly created project
+        return to_route('projects.show', $project); // redirects user to newly created project
     }
 
     /**
@@ -52,7 +50,7 @@ class ProjectController extends Controller
         $project->load('projectCards.tasks');
 
         return Inertia::render('Projects/Show', [
-            'project' => $project
+            'project' => $project,
         ]);
     }
 

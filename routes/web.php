@@ -1,12 +1,12 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ProjectCardController;
+use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\TaskController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-use App\Http\Controllers\ProjectController;
-use App\Http\Controllers\ProjectCardController;
-use App\Http\Controllers\TaskController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -26,24 +26,23 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-Route::controller(ProjectController::class)->group(function () {
-    Route::get('/projects', 'index')->name('projects.index');
-    Route::post('/projects', 'store')->name('projects.store');
-    Route::get('/projects/{project}', 'show')->name('projects.show');
-});
+    Route::controller(ProjectController::class)->group(function () {
+        Route::get('/projects', 'index')->name('projects.index');
+        Route::post('/projects', 'store')->name('projects.store');
+        Route::get('/projects/{project}', 'show')->name('projects.show');
+    });
 
-Route::controller(ProjectCardController::class)->group(function () {
-    Route::post('/projects/{project}/cards', 'store')->name('project-cards.store');
-    Route::patch('/cards/{projectCard}', 'update')->name('project-cards.update');
-    Route::delete('/cards/{projectCard}', 'destroy')->name('project-cards.destroy');
-});
+    Route::controller(ProjectCardController::class)->group(function () {
+        Route::post('/projects/{project}/cards', 'store')->name('project-cards.store');
+        Route::patch('/cards/{projectCard}', 'update')->name('project-cards.update');
+        Route::delete('/cards/{projectCard}', 'destroy')->name('project-cards.destroy');
+    });
 
-Route::controller(TaskController::class)->group(function () {
-    Route::post('/cards/{projectCard}/tasks', 'store')->name('tasks.store');
-    Route::patch('/tasks/{task}', 'update')->name('tasks.update');
-    Route::delete('/tasks/{task}', 'destroy')->name('tasks.destroy');
+    Route::controller(TaskController::class)->group(function () {
+        Route::post('/cards/{projectCard}/tasks', 'store')->name('tasks.store');
+        Route::patch('/tasks/{task}', 'update')->name('tasks.update');
+        Route::delete('/tasks/{task}', 'destroy')->name('tasks.destroy');
+    });
 });
-});
-
 
 require __DIR__.'/auth.php';
