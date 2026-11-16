@@ -2,7 +2,7 @@ import { useState } from "react";
 import { router } from "@inertiajs/react";
 import TaskMenu from "./TaskMenu";
 
-export default function TaskItem({ task, onDelete }) {
+export default function TaskItem({ task, onEdit, onDelete }) {
     const [processing, setProcessing] = useState(false);
 
     const toggle = () => {
@@ -41,13 +41,15 @@ export default function TaskItem({ task, onDelete }) {
                 </label>
 
                 <div className="flex-shrink-0 -mt-1 -mr-1">
-                    <TaskMenu onDelete={onDelete} />
+                    <TaskMenu onEdit={onEdit} onDelete={onDelete} />
                 </div>
             </div>
 
-            <p className="text-gray-400 text-xs mt-1 ml-6">
-                {task.description || "No Description"}
-            </p>
+            {task.description && (
+                <p className="text-gray-500 text-xs mt-1 ml-6 whitespace-pre-line max-h-8 overflow-hidden">
+                    {task.description}
+                </p>
+            )}
         </div>
     );
 }

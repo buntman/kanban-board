@@ -1,6 +1,6 @@
 import Dropdown from "@/Components/Dropdown";
 
-export default function TaskMenu({ onDelete }) {
+export default function TaskMenu({ onEdit, onDelete }) {
     return (
         <Dropdown>
             <Dropdown.Trigger>
@@ -26,13 +26,15 @@ export default function TaskMenu({ onDelete }) {
             </Dropdown.Trigger>
 
             <Dropdown.Content width="48">
-                <button
-                    type="button"
+                <Dropdown.Item onClick={onEdit} className="text-gray-700">
+                    Edit task
+                </Dropdown.Item>
+                <Dropdown.Item
                     onClick={onDelete}
-                    className="block w-full px-4 py-2 text-start text-sm text-red-600 hover:bg-red-50 transition"
+                    className="text-red-600 hover:bg-red-50 data-[focus]:!bg-red-50"
                 >
                     Delete task
-                </button>
+                </Dropdown.Item>
             </Dropdown.Content>
         </Dropdown>
     );

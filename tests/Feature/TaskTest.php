@@ -155,6 +155,78 @@ class TaskTest extends TestCase
         $this->assertSame($card->id, $task->project_card_id);
     }
 
+    public function test_a_task_description_can_be_added_without_changing_other_fields(): void
+    {
+        $project = $this->user->projects()->create(['name' => 'Kanban Development']);
+        $card = $project->projectCards()->create(['name' => 'MVP']);
+        $task = $card->tasks()->create([
+            'name' => 'Fix Login',
+            'position' => 1000,
+        ]);
+
+        $this->patch(route('tasks.update', $task), [
+            'description' => 'Investigate the login flow',
+        ])->assertRedirect(route('projects.show', $project));
+
+        $task->refresh();
+
+        $this->assertSame('Investigate the login flow', $task->description);
+        $this->assertSame('Fix Login', $task->name);
+        $this->assertFalse($task->is_completed);
+        $this->assertEquals(1000, $task->position);
+        $this->assertSame($card->id, $task->project_card_id);
+    }
+
+    public function test_a_task_name_and_description_can_be_updated_together(): void
+    {
+        $project = $this->user->projects()->create(['name' => 'Kanban Development']);
+        $card = $project->projectCards()->create(['name' => 'MVP']);
+        $task = $card->tasks()->create([
+            'name' => 'Fix Login',
+            'description' => 'Old description',
+        ]);
+
+        $this->patch(route('tasks.update', $task), [
+            'name' => 'Fix Registration',
+            'description' => 'Registration is broken too',
+        ])->assertRedirect(route('projects.show', $project));
+
+        $task->refresh();
+
+        $this->assertSame('Fix Registration', $task->name);
+        $this->assertSame('Registration is broken too', $task->description);
+        $this->assertFalse($task->is_completed);
+    }
+
+    public function test_a_task_description_can_be_cleared(): void
+    {
+        $project = $this->user->projects()->create(['name' => 'Kanban Development']);
+        $card = $project->projectCards()->create(['name' => 'MVP']);
+        $task = $card->tasks()->create([
+            'name' => 'Fix Login',
+            'description' => 'Investigate the login flow',
+        ]);
+
+        $this->patch(route('tasks.update', $task), [
+            'description' => '',
+        ])->assertRedirect(route('projects.show', $project));
+
+        $this->assertNull($task->fresh()->description);
+        $this->assertSame('Fix Login', $task->fresh()->name);
+    }
+
+    public function test_a_task_name_cannot_be_emptied(): void
+    {
+        $project = $this->user->projects()->create(['name' => 'Kanban Development']);
+        $card = $project->projectCards()->create(['name' => 'MVP']);
+        $task = $card->tasks()->create(['name' => 'Fix Login']);
+
+        $this->patch(route('tasks.update', $task), ['name' => ''])
+            ->assertSessionHasErrors('name');
+
+        $this->assertSame('Fix Login', $task->fresh()->name);
+    }
+
     public function test_updating_a_missing_task_returns_not_found(): void
     {
         $this->patch(route('tasks.update', 999999), [
@@ -224,5 +296,26 @@ class TaskTest extends TestCase
             ->assertForbidden();
 
         $this->assertFalse($task->fresh()->is_completed);
+    }
+
+    public function test_a_user_cannot_edit_another_users_task_details(): void
+    {
+        $task = User::factory()->create()
+            ->projects()
+            ->create(['name' => 'Theirs'])
+            ->projectCards()
+            ->create(['name' => 'MVP'])
+            ->tasks()
+            ->create(['name' => 'Fix Login']);
+
+        $this->patch(route('tasks.update', $task), [
+            'name' => 'Hacked',
+            'description' => 'Hacked',
+        ])->assertForbidden();
+
+        $task->refresh();
+
+        $this->assertSame('Fix Login', $task->name);
+        $this->assertNull($task->description);
     }
 }
