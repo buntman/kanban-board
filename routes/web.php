@@ -30,6 +30,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/projects', 'index')->name('projects.index');
         Route::post('/projects', 'store')->name('projects.store');
         Route::get('/projects/{project}', 'show')->name('projects.show');
+        Route::patch('/projects/{project}', 'update')->name('projects.update');
+        Route::delete('/projects/{project}', 'destroy')->name('projects.destroy');
     });
 
     Route::controller(ProjectCardController::class)->group(function () {

@@ -89,4 +89,84 @@ class ProjectTest extends TestCase
         $this->get(route('projects.show', $theirs))
             ->assertForbidden();
     }
+
+    public function test_a_project_can_be_updated(): void
+    {
+        $project = $this->user->projects()->create([
+            'name' => 'Old Name',
+            'description' => 'Old description',
+        ]);
+
+        $response = $this->patch(route('projects.update', $project), [
+            'name' => 'New Name',
+            'description' => 'New description',
+        ]);
+
+        $response->assertRedirect(route('projects.index'));
+
+        $this->assertDatabaseHas('projects', [
+            'id' => $project->id,
+            'name' => 'New Name',
+            'description' => 'New description',
+            'user_id' => $this->user->id,
+        ]);
+    }
+
+    public function test_a_project_name_is_required_when_updating(): void
+    {
+        $project = $this->user->projects()->create([
+            'name' => 'Original Name',
+            'description' => 'Original description',
+        ]);
+
+        $this->patch(route('projects.update', $project), ['name' => ''])
+            ->assertSessionHasErrors('name');
+
+        $this->assertDatabaseHas('projects', [
+            'id' => $project->id,
+            'name' => 'Original Name',
+            'description' => 'Original description',
+        ]);
+    }
+
+    public function test_a_project_can_be_deleted_with_its_cards_and_tasks(): void
+    {
+        $project = $this->user->projects()->create(['name' => 'Project Beta']);
+        $card = $project->projectCards()->create(['name' => 'MVP']);
+        $task = $card->tasks()->create(['name' => 'Fix Login']);
+
+        $response = $this->delete(route('projects.destroy', $project));
+
+        $response->assertRedirect(route('projects.index'));
+
+        $this->assertDatabaseMissing('projects', ['id' => $project->id]);
+        $this->assertDatabaseMissing('project_cards', ['id' => $card->id]);
+        $this->assertDatabaseMissing('tasks', ['id' => $task->id]);
+    }
+
+    public function test_a_user_cannot_update_another_users_project(): void
+    {
+        $theirs = User::factory()->create()->projects()->create(['name' => 'Theirs']);
+
+        $this->patch(route('projects.update', $theirs), ['name' => 'Hacked'])
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('projects', [
+            'id' => $theirs->id,
+            'name' => 'Theirs',
+        ]);
+    }
+
+    public function test_a_user_cannot_delete_another_users_project(): void
+    {
+        $theirs = User::factory()->create()->projects()->create(['name' => 'Theirs']);
+
+        $this->delete(route('projects.destroy', $theirs))
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('projects', [
+            'id' => $theirs->id,
+            'name' => 'Theirs',
+        ]);
+    }
 }
