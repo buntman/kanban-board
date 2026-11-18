@@ -22,11 +22,6 @@ class ProjectController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    public function create() {}
-
-    /**
      * Store a newly created project in storage.
      */
     public function store(Request $request)
@@ -55,19 +50,20 @@ class ProjectController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Project $project)
-    {
-        //
-    }
-
-    /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, Project $project)
     {
-        //
+        Gate::authorize('update', $project);
+
+        $validated = $request->validate([
+            'name' => 'sometimes|required|string|max:100',
+            'description' => 'sometimes|nullable|string|max:2000',
+        ]);
+
+        $project->update($validated);
+
+        return to_route('projects.index', $project);
     }
 
     /**
@@ -75,6 +71,10 @@ class ProjectController extends Controller
      */
     public function destroy(Project $project)
     {
-        //
+        Gate::authorize('delete', $project);
+
+        $project->delete();
+
+        return to_route('projects.index', $project);
     }
 }
