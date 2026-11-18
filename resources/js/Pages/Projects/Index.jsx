@@ -1,5 +1,6 @@
 import React from "react";
-import { useForm, Link } from "@inertiajs/react";
+import { Head, useForm } from "@inertiajs/react";
+import ProjectItem from "./Partials/ProjectItem";
 
 export default function Index({ projects }) {
     // Inertia's form helper
@@ -17,6 +18,8 @@ export default function Index({ projects }) {
 
     return (
         <div className="p-8 max-w-7xl mx-auto">
+            <Head title="Projects" />
+
             <h1 className="text-3xl font-bold text-gray-800 mb-8">Projects</h1>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -91,19 +94,10 @@ export default function Index({ projects }) {
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {projects.map((project) => (
-                                <Link
+                                <ProjectItem
                                     key={project.id}
-                                    href={route("projects.show", project.id)}
-                                    className="bg-white p-6 rounded-lg shadow border hover:shadow-md transition block cursor-pointer"
-                                >
-                                    <h3 className="text-lg font-semibold text-gray-800">
-                                        {project.name}
-                                    </h3>
-                                    <p className="text-gray-500 text-sm mt-1">
-                                        {project.description ||
-                                            "No description provided."}
-                                    </p>
-                                </Link>
+                                    project={project}
+                                />
                             ))}
                         </div>
                     )}

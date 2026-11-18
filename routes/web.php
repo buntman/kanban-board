@@ -29,7 +29,8 @@ Route::middleware('auth')->group(function () {
     Route::controller(ProjectController::class)->group(function () {
         Route::get('/projects', 'index')->name('projects.index');
         Route::post('/projects', 'store')->name('projects.store');
-        Route::get('/projects/{project}', 'update')->name('projects.update');
+        Route::get('/projects/{project}', 'show')->name('projects.show');
+        Route::patch('/projects/{project}', 'update')->name('projects.update');
         Route::delete('/projects/{project}', 'destroy')->name('projects.destroy');
     });
 

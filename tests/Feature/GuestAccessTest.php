@@ -30,6 +30,8 @@ class GuestAccessTest extends TestCase
         $task = $card->tasks()->create(['name' => 'Fix Login']);
 
         $this->post('/projects', ['name' => 'Hack'])->assertRedirect(route('login'));
+        $this->patch(route('projects.update', $project), ['name' => 'Hack'])->assertRedirect(route('login'));
+        $this->delete(route('projects.destroy', $project))->assertRedirect(route('login'));
         $this->post(route('project-cards.store', $project), ['name' => 'Hack'])->assertRedirect(route('login'));
         $this->patch(route('project-cards.update', $card), ['name' => 'Hack'])->assertRedirect(route('login'));
         $this->post(route('tasks.store', $card), ['name' => 'Hack'])->assertRedirect(route('login'));
