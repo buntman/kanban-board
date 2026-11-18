@@ -63,7 +63,7 @@ class ProjectController extends Controller
 
         $project->update($validated);
 
-        return to_route('projects.index', $project);
+        return to_route('projects.index');
     }
 
     /**
@@ -75,6 +75,6 @@ class ProjectController extends Controller
 
         $project->delete();
 
-        return to_route('projects.index', $project);
+        return to_route('projects.index');
     }
 }
