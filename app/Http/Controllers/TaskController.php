@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\ProjectCard;
 use App\Models\Task;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class TaskController extends Controller
 {
@@ -85,6 +88,73 @@ class TaskController extends Controller
 
         $project = $task->projectCard->project;
         $task->delete();
+
+        return to_route('projects.show', $project);
+    }
+
+    public function move(Request $request, Task $task)
+    {
+        $sourceCard = $task->projectCard;
+        $project = $sourceCard->project;
+
+        Gate::authorize('update', $task->projectCard->project);
+
+        $validated = $request->validate([
+            'project_card_id' => [
+                'required',
+                'integer',
+                Rule::exists('project_cards', 'id'),
+            ],
+            'position' => ['required', 'integer', 'min:0'],
+        ]);
+
+        $destinationCard = ProjectCard::findOrFail($validated['project_card_id']);
+
+        Gate::authorize('update', $destinationCard->project);
+
+        if ($destinationCard->project_id !== $project->id) {
+            throw ValidationException::withMessages([
+                'project_card_id' => 'The selected project card must belong to this project.',
+            ]);
+        }
+
+        $sourceTaskIds = $sourceCard->tasks()
+            ->whereKeyNot($task->id)
+            ->orderBy('position')
+            ->pluck('id')
+            ->all();
+
+        $destinationTaskIds = $destinationCard->tasks()
+            ->whereKeyNot($task->id)
+            ->orderBy('position')
+            ->pluck('id')
+            ->all();
+
+        $position = min($validated['position'], count($destinationTaskIds));
+
+        array_splice($destinationTaskIds, $position, 0, [$task->id]);
+
+        DB::transaction(function () use (
+            $sourceCard,
+            $destinationCard,
+            $sourceTaskIds,
+            $destinationTaskIds,
+        ) {
+            foreach ($destinationTaskIds as $index => $taskId) {
+                Task::whereKey($taskId)->update([
+                    'project_card_id' => $destinationCard->id,
+                    'position' => ($index + 1) * 1000,
+                ]);
+            }
+
+            if ($sourceCard->isNot($destinationCard)) {
+                foreach ($sourceTaskIds as $index => $taskId) {
+                    Task::whereKey($taskId)->update([
+                        'position' => ($index + 1) * 1000,
+                    ]);
+                }
+            }
+        });
 
         return to_route('projects.show', $project);
     }
