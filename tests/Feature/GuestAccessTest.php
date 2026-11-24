@@ -36,6 +36,10 @@ class GuestAccessTest extends TestCase
         $this->patch(route('project-cards.update', $card), ['name' => 'Hack'])->assertRedirect(route('login'));
         $this->post(route('tasks.store', $card), ['name' => 'Hack'])->assertRedirect(route('login'));
         $this->patch(route('tasks.update', $task), ['is_completed' => true])->assertRedirect(route('login'));
+        $this->patch(route('tasks.move', $task), [
+            'project_card_id' => $card->id,
+            'position' => 0,
+        ])->assertRedirect(route('login'));
         $this->delete(route('project-cards.destroy', $card))->assertRedirect(route('login'));
         $this->delete(route('tasks.destroy', $task))->assertRedirect(route('login'));
 
@@ -43,8 +47,10 @@ class GuestAccessTest extends TestCase
         $this->assertDatabaseCount('project_cards', 1);
         $this->assertDatabaseHas('tasks', [
             'id' => $task->id,
+            'project_card_id' => $card->id,
             'name' => 'Fix Login',
             'description' => null,
+            'position' => 1000,
             'is_completed' => false,
         ]);
     }

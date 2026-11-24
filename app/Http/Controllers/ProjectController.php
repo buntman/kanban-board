@@ -42,7 +42,11 @@ class ProjectController extends Controller
     public function show(Project $project)
     {
         Gate::authorize('view', $project);
-        $project->load('projectCards.tasks');
+
+        $project->load([
+            'projectCards' => fn ($query) => $query->orderBy('position'),
+            'projectCards.tasks' => fn ($query) => $query->orderBy('position'),
+        ]);
 
         return Inertia::render('Projects/Show', [
             'project' => $project,

@@ -318,4 +318,120 @@ class TaskTest extends TestCase
         $this->assertSame('Fix Login', $task->name);
         $this->assertNull($task->description);
     }
+
+    public function test_a_task_can_be_reordered_within_a_card(): void
+    {
+        $project = $this->user->projects()->create(['name' => 'Kanban Development']);
+        $card = $project->projectCards()->create(['name' => 'MVP']);
+        $firstTask = $card->tasks()->create(['name' => 'First Task', 'position' => 1000]);
+        $secondTask = $card->tasks()->create(['name' => 'Second Task', 'position' => 2000]);
+        $thirdTask = $card->tasks()->create(['name' => 'Third Task', 'position' => 3000]);
+
+        $this->patch(route('tasks.move', $thirdTask), [
+            'project_card_id' => $card->id,
+            'position' => 0,
+        ])->assertRedirect(route('projects.show', $project));
+
+        $this->assertDatabaseHas('tasks', [
+            'id' => $thirdTask->id,
+            'project_card_id' => $card->id,
+            'position' => 1000,
+        ]);
+        $this->assertDatabaseHas('tasks', [
+            'id' => $firstTask->id,
+            'project_card_id' => $card->id,
+            'position' => 2000,
+        ]);
+        $this->assertDatabaseHas('tasks', [
+            'id' => $secondTask->id,
+            'project_card_id' => $card->id,
+            'position' => 3000,
+        ]);
+    }
+
+    public function test_a_task_can_be_moved_to_another_card_in_the_same_project(): void
+    {
+        $project = $this->user->projects()->create(['name' => 'Kanban Development']);
+        $sourceCard = $project->projectCards()->create(['name' => 'To Do']);
+        $destinationCard = $project->projectCards()->create(['name' => 'Done']);
+        $movedTask = $sourceCard->tasks()->create(['name' => 'Move Me', 'position' => 1000]);
+        $remainingTask = $sourceCard->tasks()->create(['name' => 'Stay Here', 'position' => 2000]);
+        $firstDestinationTask = $destinationCard->tasks()->create(['name' => 'Done First', 'position' => 1000]);
+        $secondDestinationTask = $destinationCard->tasks()->create(['name' => 'Done Second', 'position' => 2000]);
+
+        $this->patch(route('tasks.move', $movedTask), [
+            'project_card_id' => $destinationCard->id,
+            'position' => 1,
+        ])->assertRedirect(route('projects.show', $project));
+
+        $this->assertDatabaseHas('tasks', [
+            'id' => $movedTask->id,
+            'project_card_id' => $destinationCard->id,
+            'position' => 2000,
+        ]);
+        $this->assertDatabaseHas('tasks', [
+            'id' => $firstDestinationTask->id,
+            'project_card_id' => $destinationCard->id,
+            'position' => 1000,
+        ]);
+        $this->assertDatabaseHas('tasks', [
+            'id' => $secondDestinationTask->id,
+            'project_card_id' => $destinationCard->id,
+            'position' => 3000,
+        ]);
+        $this->assertDatabaseHas('tasks', [
+            'id' => $remainingTask->id,
+            'project_card_id' => $sourceCard->id,
+            'position' => 1000,
+        ]);
+        $this->assertDatabaseMissing('tasks', [
+            'id' => $movedTask->id,
+            'project_card_id' => $sourceCard->id,
+        ]);
+    }
+
+    public function test_a_task_cannot_be_moved_to_another_users_card(): void
+    {
+        $project = $this->user->projects()->create(['name' => 'Mine']);
+        $card = $project->projectCards()->create(['name' => 'MVP']);
+        $task = $card->tasks()->create(['name' => 'Fix Login', 'position' => 1000]);
+        $theirCard = User::factory()->create()
+            ->projects()
+            ->create(['name' => 'Theirs'])
+            ->projectCards()
+            ->create(['name' => 'Done']);
+
+        $this->patch(route('tasks.move', $task), [
+            'project_card_id' => $theirCard->id,
+            'position' => 0,
+        ])->assertForbidden();
+
+        $this->assertDatabaseHas('tasks', [
+            'id' => $task->id,
+            'project_card_id' => $card->id,
+            'position' => 1000,
+        ]);
+        $this->assertDatabaseCount('tasks', 1);
+    }
+
+    public function test_a_task_cannot_be_moved_to_a_card_in_another_project(): void
+    {
+        $project = $this->user->projects()->create(['name' => 'Kanban Development']);
+        $card = $project->projectCards()->create(['name' => 'MVP']);
+        $task = $card->tasks()->create(['name' => 'Fix Login', 'position' => 1000]);
+        $otherProject = $this->user->projects()->create(['name' => 'Another Board']);
+        $otherCard = $otherProject->projectCards()->create(['name' => 'Done']);
+
+        $this->patch(route('tasks.move', $task), [
+            'project_card_id' => $otherCard->id,
+            'position' => 0,
+        ])->assertSessionHasErrors('project_card_id');
+
+        $this->assertDatabaseHas('tasks', [
+            'id' => $task->id,
+            'project_card_id' => $card->id,
+            'position' => 1000,
+        ]);
+        $this->assertDatabaseCount('tasks', 1);
+    }
 }
