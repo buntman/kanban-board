@@ -13,6 +13,9 @@ export default function Show({ project }) {
     const [taskToDelete, setTaskToDelete] = useState(null);
     const [isDeletingTask, setIsDeletingTask] = useState(false);
     const [taskToEdit, setTaskToEdit] = useState(null);
+    const [draggedTask, setDraggedTask] = useState(null);
+    const [dropTarget, setDropTarget] = useState(null);
+    const [isMoving, setIsMoving] = useState(false);
 
     const { data, setData, post, processing, errors, reset } = useForm({
         name: "",
@@ -56,6 +59,81 @@ export default function Show({ project }) {
         });
     };
 
+    const handleDragStart = (event, task) => {
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData("text/plain", String(task.id));
+        setDraggedTask(task);
+    };
+
+    const handleDragEnd = () => {
+        setDraggedTask(null);
+        setDropTarget(null);
+    };
+
+    const handleTaskDragOver = (event, card, task) => {
+        event.preventDefault();
+
+        const rect = event.currentTarget.getBoundingClientRect();
+        const after = event.clientY > rect.top + rect.height / 2;
+
+        setDropTarget({
+            cardId: card.id,
+            taskId: task.id,
+            after,
+        });
+    };
+
+    const moveTask = (card, targetIndex) => {
+        if (!draggedTask || isMoving) {
+            return;
+        }
+
+        const cardTasks = card.tasks ?? [];
+        const fromThisCard = draggedTask.project_card_id === card.id;
+        const draggedIndex = fromThisCard
+            ? cardTasks.findIndex((task) => task.id === draggedTask.id)
+            : -1;
+
+        let position = targetIndex;
+
+        if (fromThisCard && draggedIndex < targetIndex) {
+            position -= 1;
+        }
+
+        setIsMoving(true);
+
+        router.patch(
+            route("tasks.move", draggedTask.id),
+            {
+                project_card_id: card.id,
+                position,
+            },
+            {
+                preserveScroll: true,
+                onFinish: () => {
+                    setIsMoving(false);
+                    setDraggedTask(null);
+                    setDropTarget(null);
+                },
+            }
+        );
+    };
+
+    const handleDropOnTask = (event, card, index) => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const rect = event.currentTarget.getBoundingClientRect();
+        const after = event.clientY > rect.top + rect.height / 2;
+
+        moveTask(card, index + (after ? 1 : 0));
+    };
+
+    const handleDropOnColumn = (event, card) => {
+        event.preventDefault();
+        moveTask(card, card.tasks?.length ?? 0);
+    };
+
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
             {/* TOP HEADER */}
@@ -92,15 +170,52 @@ export default function Show({ project }) {
                             />
 
                             {/* Tasks List (Vertical Scroll if too many) */}
-                            <div className="flex-1 overflow-y-auto space-y-3 pr-1">
+                            <div
+                                className="flex-1 overflow-y-auto space-y-3 pr-1"
+                                onDragOver={(event) => event.preventDefault()}
+                                onDrop={(event) =>
+                                    handleDropOnColumn(event, card)
+                                }
+                            >
                                 {card.tasks &&
-                                    card.tasks.map((task) => (
+                                    card.tasks.map((task, index) => (
                                         <TaskItem
                                             key={task.id}
                                             task={task}
                                             onEdit={() => setTaskToEdit(task)}
                                             onDelete={() =>
                                                 setTaskToDelete(task)
+                                            }
+                                            isDragging={
+                                                draggedTask?.id === task.id
+                                            }
+                                            dropBefore={
+                                                dropTarget?.cardId === card.id &&
+                                                dropTarget?.taskId === task.id &&
+                                                !dropTarget.after
+                                            }
+                                            dropAfter={
+                                                dropTarget?.cardId === card.id &&
+                                                dropTarget?.taskId === task.id &&
+                                                dropTarget.after
+                                            }
+                                            onDragStart={(event) =>
+                                                handleDragStart(event, task)
+                                            }
+                                            onDragEnd={handleDragEnd}
+                                            onDragOver={(event) =>
+                                                handleTaskDragOver(
+                                                    event,
+                                                    card,
+                                                    task
+                                                )
+                                            }
+                                            onDrop={(event) =>
+                                                handleDropOnTask(
+                                                    event,
+                                                    card,
+                                                    index
+                                                )
                                             }
                                         />
                                     ))}
