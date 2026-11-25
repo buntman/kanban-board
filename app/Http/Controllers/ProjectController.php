@@ -10,6 +10,18 @@ use Inertia\Inertia;
 class ProjectController extends Controller
 {
     /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request)
+    {
+        $projects = $request->user()->projects()->latest()->get();
+
+        return Inertia::render('Projects/Index', [
+            'projects' => $projects,
+        ]);
+    }
+
+    /**
      * Store a newly created project in storage.
      */
     public function store(Request $request)
