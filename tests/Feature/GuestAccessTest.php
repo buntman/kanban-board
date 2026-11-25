@@ -40,11 +40,17 @@ class GuestAccessTest extends TestCase
             'project_card_id' => $card->id,
             'position' => 0,
         ])->assertRedirect(route('login'));
+        $this->patch(route('project-cards.move', $card), ['position' => 0])->assertRedirect(route('login'));
         $this->delete(route('project-cards.destroy', $card))->assertRedirect(route('login'));
         $this->delete(route('tasks.destroy', $task))->assertRedirect(route('login'));
 
         $this->assertDatabaseCount('projects', 1);
         $this->assertDatabaseCount('project_cards', 1);
+        $this->assertDatabaseHas('project_cards', [
+            'id' => $card->id,
+            'name' => 'MVP',
+            'position' => 1000,
+        ]);
         $this->assertDatabaseHas('tasks', [
             'id' => $task->id,
             'project_card_id' => $card->id,
