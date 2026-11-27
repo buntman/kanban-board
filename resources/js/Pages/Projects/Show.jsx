@@ -16,6 +16,9 @@ export default function Show({ project }) {
     const [draggedTask, setDraggedTask] = useState(null);
     const [dropTarget, setDropTarget] = useState(null);
     const [isMoving, setIsMoving] = useState(false);
+    const [draggedCard, setDraggedCard] = useState(null);
+    const [cardDropTarget, setCardDropTarget] = useState(null);
+    const [isMovingCard, setIsMovingCard] = useState(false);
 
     const { data, setData, post, processing, errors, reset } = useForm({
         name: "",
@@ -23,7 +26,7 @@ export default function Show({ project }) {
 
     const handleCreateCard = (e) => {
         e.preventDefault();
-        // We will build this route next, but this sets up the frontend action
+
         post(route("project-cards.store", project.id), {
             preserveScroll: true,
             onSuccess: () => {
@@ -71,6 +74,10 @@ export default function Show({ project }) {
     };
 
     const handleTaskDragOver = (event, card, task) => {
+        if (draggedCard) {
+            return;
+        }
+
         event.preventDefault();
 
         const rect = event.currentTarget.getBoundingClientRect();
@@ -121,6 +128,11 @@ export default function Show({ project }) {
 
     const handleDropOnTask = (event, card, index) => {
         event.preventDefault();
+
+        if (draggedCard) {
+            return;
+        }
+
         event.stopPropagation();
 
         const rect = event.currentTarget.getBoundingClientRect();
@@ -132,6 +144,76 @@ export default function Show({ project }) {
     const handleDropOnColumn = (event, card) => {
         event.preventDefault();
         moveTask(card, card.tasks?.length ?? 0);
+    };
+
+    const handleCardDragStart = (event, card) => {
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData("text/plain", String(card.id));
+        setDraggedCard(card);
+    };
+
+    const handleCardDragEnd = () => {
+        setDraggedCard(null);
+        setCardDropTarget(null);
+    };
+
+    const handleColumnDragOver = (event, card) => {
+        if (!draggedCard || isMovingCard) {
+            return;
+        }
+
+        event.preventDefault();
+
+        const rect = event.currentTarget.getBoundingClientRect();
+        const after = event.clientX > rect.left + rect.width / 2;
+
+        setCardDropTarget({ cardId: card.id, after });
+    };
+
+    const moveCard = (cardToMove, targetIndex) => {
+        if (!cardToMove || isMovingCard) {
+            return;
+        }
+
+        const projectCards = project.project_cards ?? [];
+        const draggedIndex = projectCards.findIndex(
+            (projectCard) => projectCard.id === cardToMove.id
+        );
+
+        let position = targetIndex;
+
+        if (draggedIndex < targetIndex) {
+            position -= 1;
+        }
+
+        setIsMovingCard(true);
+
+        router.patch(
+            route("project-cards.move", cardToMove.id),
+            { position },
+            {
+                preserveScroll: true,
+                onFinish: () => {
+                    setIsMovingCard(false);
+                    setDraggedCard(null);
+                    setCardDropTarget(null);
+                },
+            }
+        );
+    };
+
+    const handleColumnDrop = (event, card, index) => {
+        if (!draggedCard || isMovingCard) {
+            return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        const rect = event.currentTarget.getBoundingClientRect();
+        const after = event.clientX > rect.left + rect.width / 2;
+
+        moveCard(draggedCard, index + (after ? 1 : 0));
     };
 
     return (
@@ -158,15 +240,45 @@ export default function Show({ project }) {
             <main className="flex-1 p-8 overflow-x-auto flex items-start space-x-6">
                 {/* MAP THROUGH PROJECT CARDS (COLUMNS) */}
                 {project.project_cards &&
-                    project.project_cards.map((card) => (
+                    project.project_cards.map((card, index) => (
                         <div
                             key={card.id}
-                            className="w-80 bg-gray-100 rounded-xl p-4 flex-shrink-0 flex flex-col max-h-[80vh] shadow-sm border"
+                            onDragOver={(event) =>
+                                handleColumnDragOver(event, card)
+                            }
+                            onDrop={(event) =>
+                                handleColumnDrop(event, card, index)
+                            }
+                            className={`w-80 bg-gray-100 rounded-xl p-4 flex-shrink-0 flex flex-col max-h-[80vh] shadow-sm border transition ${
+                                draggedCard?.id === card.id ? "opacity-40" : ""
+                            } ${
+                                cardDropTarget?.cardId === card.id &&
+                                !cardDropTarget.after
+                                    ? "border-l-4 border-indigo-500"
+                                    : ""
+                            } ${
+                                cardDropTarget?.cardId === card.id &&
+                                cardDropTarget.after
+                                    ? "border-r-4 border-indigo-500"
+                                    : ""
+                            }`}
                         >
                             {/* Column Header */}
                             <CardHeader
                                 card={card}
                                 onDelete={() => setCardToDelete(card)}
+                                onDragStart={handleCardDragStart}
+                                onDragEnd={handleCardDragEnd}
+                                onMoveLeft={
+                                    index > 0
+                                        ? () => moveCard(card, index - 1)
+                                        : null
+                                }
+                                onMoveRight={
+                                    index < project.project_cards.length - 1
+                                        ? () => moveCard(card, index + 2)
+                                        : null
+                                }
                             />
 
                             {/* Tasks List (Vertical Scroll if too many) */}
@@ -240,7 +352,7 @@ export default function Show({ project }) {
                             onClick={() => setIsCreatingCard(true)}
                             className="w-full bg-white/60 hover:bg-white border-2 border-dashed border-gray-300 hover:border-gray-400 rounded-xl p-4 text-gray-600 font-medium text-sm flex items-center justify-center transition shadow-sm"
                         >
-                            + New Card
+                            + New Column
                         </button>
                     ) : (
                         /* STATE B: The popup/slide-down form */
@@ -255,7 +367,7 @@ export default function Show({ project }) {
                                     onChange={(e) =>
                                         setData("name", e.target.value)
                                     }
-                                    placeholder="Enter card name..."
+                                    placeholder="Enter column name..."
                                     autoFocus // Automatically focuses the input when opened
                                     className="w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2"
                                 />
@@ -271,7 +383,7 @@ export default function Show({ project }) {
                                         disabled={processing}
                                         className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium px-3 py-2 rounded-md transition disabled:opacity-50"
                                     >
-                                        Add Card
+                                        Add Column
                                     </button>
                                     <button
                                         type="button"

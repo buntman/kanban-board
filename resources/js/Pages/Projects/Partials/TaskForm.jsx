@@ -32,7 +32,7 @@ export default function TaskForm({ card }) {
                 onClick={() => setIsOpen(true)}
                 className="mt-4 w-full py-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg text-sm font-medium transition"
             >
-                + Add a task
+                + Add a card
             </button>
         );
     }
@@ -43,7 +43,7 @@ export default function TaskForm({ card }) {
                 type="text"
                 value={data.name}
                 onChange={(e) => setData("name", e.target.value)}
-                placeholder="Enter task name..."
+                placeholder="Enter card name..."
                 aria-label="Task name"
                 autoFocus
                 className="w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2"
@@ -59,7 +59,7 @@ export default function TaskForm({ card }) {
                     disabled={processing}
                     className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium px-3 py-2 rounded-md transition disabled:opacity-50"
                 >
-                    Add Task
+                    Add Card
                 </button>
                 <button
                     type="button"
