@@ -38,6 +38,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/projects/{project}/cards', 'store')->name('project-cards.store');
         Route::patch('/cards/{projectCard}', 'update')->name('project-cards.update');
         Route::delete('/cards/{projectCard}', 'destroy')->name('project-cards.destroy');
+        Route::patch('/cards/{projectCard}/move', 'move')->name('project-cards.move');
     });
 
     Route::controller(TaskController::class)->group(function () {

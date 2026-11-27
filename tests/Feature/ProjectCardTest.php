@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class ProjectCardTest extends TestCase
@@ -159,5 +160,98 @@ class ProjectCardTest extends TestCase
             ->assertForbidden();
 
         $this->assertDatabaseHas('project_cards', ['id' => $card->id]);
+    }
+
+    public function test_a_card_can_be_reordered_within_a_project(): void
+    {
+        $project = $this->user->projects()->create(['name' => 'Kanban Development']);
+        $backlog = $project->projectCards()->create(['name' => 'Backlog', 'position' => 1000]);
+        $inProgress = $project->projectCards()->create(['name' => 'In Progress', 'position' => 2000]);
+        $done = $project->projectCards()->create(['name' => 'Done', 'position' => 3000]);
+
+        $this->patch(route('project-cards.move', $done), ['position' => 0])
+            ->assertRedirect(route('projects.show', $project));
+
+        $this->assertDatabaseHas('project_cards', ['id' => $done->id, 'position' => 1000]);
+        $this->assertDatabaseHas('project_cards', ['id' => $backlog->id, 'position' => 2000]);
+        $this->assertDatabaseHas('project_cards', ['id' => $inProgress->id, 'position' => 3000]);
+    }
+
+    public function test_a_position_past_the_last_card_moves_the_card_to_the_end(): void
+    {
+        $project = $this->user->projects()->create(['name' => 'Kanban Development']);
+        $backlog = $project->projectCards()->create(['name' => 'Backlog', 'position' => 1000]);
+        $inProgress = $project->projectCards()->create(['name' => 'In Progress', 'position' => 2000]);
+        $done = $project->projectCards()->create(['name' => 'Done', 'position' => 3000]);
+
+        $this->patch(route('project-cards.move', $backlog), ['position' => 10])
+            ->assertRedirect(route('projects.show', $project));
+
+        $this->assertDatabaseHas('project_cards', ['id' => $inProgress->id, 'position' => 1000]);
+        $this->assertDatabaseHas('project_cards', ['id' => $done->id, 'position' => 2000]);
+        $this->assertDatabaseHas('project_cards', ['id' => $backlog->id, 'position' => 3000]);
+    }
+
+    public static function invalidPositions(): array
+    {
+        return [
+            'negative' => [-1],
+            'non-integer' => ['first'],
+        ];
+    }
+
+    #[DataProvider('invalidPositions')]
+    public function test_rejects_an_invalid_card_position(mixed $position): void
+    {
+        $project = $this->user->projects()->create(['name' => 'Kanban Development']);
+        $backlog = $project->projectCards()->create(['name' => 'Backlog', 'position' => 1000]);
+        $done = $project->projectCards()->create(['name' => 'Done', 'position' => 2000]);
+
+        $this->patch(route('project-cards.move', $backlog), ['position' => $position])
+            ->assertSessionHasErrors('position');
+
+        $this->assertDatabaseHas('project_cards', ['id' => $backlog->id, 'position' => 1000]);
+        $this->assertDatabaseHas('project_cards', ['id' => $done->id, 'position' => 2000]);
+    }
+
+    public function test_requires_a_card_position(): void
+    {
+        $project = $this->user->projects()->create(['name' => 'Kanban Development']);
+        $card = $project->projectCards()->create(['name' => 'MVP', 'position' => 1000]);
+
+        $this->patch(route('project-cards.move', $card), [])
+            ->assertSessionHasErrors('position');
+
+        $this->assertDatabaseHas('project_cards', ['id' => $card->id, 'position' => 1000]);
+    }
+
+    public function test_reordering_cards_leaves_another_projects_cards_unchanged(): void
+    {
+        $project = $this->user->projects()->create(['name' => 'Kanban Development']);
+        $otherProject = $this->user->projects()->create(['name' => 'Another Board']);
+        $backlog = $project->projectCards()->create(['name' => 'Backlog', 'position' => 1000]);
+        $done = $project->projectCards()->create(['name' => 'Done', 'position' => 2000]);
+        $otherCard = $otherProject->projectCards()->create(['name' => 'Other', 'position' => 1000]);
+
+        $this->patch(route('project-cards.move', $backlog), ['position' => 1])
+            ->assertRedirect(route('projects.show', $project));
+
+        $this->assertDatabaseHas('project_cards', ['id' => $done->id, 'position' => 1000]);
+        $this->assertDatabaseHas('project_cards', ['id' => $backlog->id, 'position' => 2000]);
+        $this->assertDatabaseHas('project_cards', ['id' => $otherCard->id, 'position' => 1000]);
+    }
+
+    public function test_a_user_cannot_reorder_another_users_cards(): void
+    {
+        $card = User::factory()->create()
+            ->projects()
+            ->create(['name' => 'Theirs'])
+            ->projectCards()
+            ->create(['name' => 'MVP', 'position' => 1000]);
+
+        $this->patch(route('project-cards.move', $card), ['position' => 0])
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('project_cards', ['id' => $card->id, 'position' => 1000]);
     }
 }

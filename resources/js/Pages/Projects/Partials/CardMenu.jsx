@@ -1,6 +1,11 @@
 import Dropdown from "@/Components/Dropdown";
 
-export default function CardMenu({ onRename, onDelete }) {
+export default function CardMenu({
+    onRename,
+    onDelete,
+    onMoveLeft,
+    onMoveRight,
+}) {
     return (
         <Dropdown>
             <Dropdown.Trigger>
@@ -26,6 +31,22 @@ export default function CardMenu({ onRename, onDelete }) {
             </Dropdown.Trigger>
 
             <Dropdown.Content width="48">
+                {onMoveLeft && (
+                    <Dropdown.Item
+                        onClick={onMoveLeft}
+                        className="text-gray-700"
+                    >
+                        &larr; Move column left
+                    </Dropdown.Item>
+                )}
+                {onMoveRight && (
+                    <Dropdown.Item
+                        onClick={onMoveRight}
+                        className="text-gray-700"
+                    >
+                        Move column right &rarr;
+                    </Dropdown.Item>
+                )}
                 <Dropdown.Item onClick={onRename} className="text-gray-700">
                     Rename card
                 </Dropdown.Item>
