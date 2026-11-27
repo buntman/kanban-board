@@ -3,7 +3,6 @@ import { Head, useForm } from "@inertiajs/react";
 import ProjectItem from "./Partials/ProjectItem";
 
 export default function Index({ projects }) {
-    // Inertia's form helper
     const { data, setData, post, processing, errors, reset } = useForm({
         name: "",
         description: "",

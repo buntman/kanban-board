@@ -3,7 +3,14 @@ import { useForm } from "@inertiajs/react";
 import CardMenu from "./CardMenu";
 import InputError from "@/Components/InputError";
 
-export default function CardHeader({ card, onDelete }) {
+export default function CardHeader({
+    card,
+    onDelete,
+    onDragStart,
+    onDragEnd,
+    onMoveLeft,
+    onMoveRight,
+}) {
     const [isEditing, setIsEditing] = useState(false);
 
     const { data, setData, patch, processing, errors, reset, clearErrors } =
@@ -89,6 +96,27 @@ export default function CardHeader({ card, onDelete }) {
                 </div>
             ) : (
                 <>
+                    <span
+                        draggable
+                        onDragStart={(event) => onDragStart(event, card)}
+                        onDragEnd={onDragEnd}
+                        title="Drag to reorder column"
+                        aria-label="Drag to reorder column"
+                        className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 px-1 select-none flex-shrink-0"
+                    >
+                        <svg
+                            className="w-4 h-4"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                        >
+                            <circle cx="7" cy="5" r="1" />
+                            <circle cx="13" cy="5" r="1" />
+                            <circle cx="7" cy="10" r="1" />
+                            <circle cx="13" cy="10" r="1" />
+                            <circle cx="7" cy="15" r="1" />
+                            <circle cx="13" cy="15" r="1" />
+                        </svg>
+                    </span>
                     <h3 className="font-semibold text-gray-700 flex-1">
                         {card.name}
                     </h3>
@@ -96,6 +124,8 @@ export default function CardHeader({ card, onDelete }) {
                         <CardMenu
                             onRename={startEditing}
                             onDelete={onDelete}
+                            onMoveLeft={onMoveLeft}
+                            onMoveRight={onMoveRight}
                         />
                     </div>
                 </>

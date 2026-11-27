@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Project;
 use App\Models\ProjectCard;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 class ProjectCardController extends Controller
@@ -88,5 +89,36 @@ class ProjectCardController extends Controller
         $projectCard->delete();
 
         return to_route('projects.show', $project);
+    }
+
+    public function move(Request $request, ProjectCard $projectCard)
+    {
+        Gate::authorize('update', $projectCard->project);
+        $validated = $request->validate([
+            'position' => 'required|integer|min:0',
+        ]);
+
+        $projectCardsIds = $projectCard->project->projectCards()
+            ->whereKeyNot($projectCard->id)
+            ->orderBy('position')
+            ->pluck('id')
+            ->all();
+
+        $position = min($validated['position'], count($projectCardsIds));
+
+        array_splice($projectCardsIds, $position, 0, [$projectCard->id]);
+
+        DB::transaction(function () use (
+
+            $projectCardsIds,
+        ) {
+            foreach ($projectCardsIds as $index => $projectCardId) {
+                ProjectCard::whereKey($projectCardId)->update([
+                    'position' => ($index + 1) * 1000,
+                ]);
+            }
+        });
+
+        return to_route('projects.show', $projectCard->project);
     }
 }
